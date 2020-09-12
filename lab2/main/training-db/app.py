@@ -28,7 +28,7 @@ def update_data(table_name):
 
 
 @app.route('/training-db/<table_name>', methods=['GET'])
-def train_models(table_name):
+def read_data(table_name):
     df = read_data_records(table_name)
     df = df.drop(columns=['id'])
     resp = Response(df.to_json(orient='records'), status=200, mimetype='application/json')

@@ -1,17 +1,18 @@
 import pandas as pd
 import sqlalchemy as db
-from sqlalchemy import Column, Float, Table, MetaData, Integer
+from sqlalchemy import Column, Float, Table, Integer
 from sqlalchemy.ext.declarative import declarative_base
 
 engine = db.create_engine('sqlite:///trainingdata.db', echo=True)
 Base = declarative_base()
 Base.metadata.reflect(engine)
 
+
 def create_tb(table_name, column_names):
     conn = engine.connect()
     trans = conn.begin()
     columns = (Column(name, Float, quote=False) for name in column_names)
-    v_table = Table(table_name, Column('id', Integer, primary_key=True, autoincrement=True),
+    v_table = Table(table_name, Base.metadata, Column('id', Integer, primary_key=True, autoincrement=True),
                     extend_existing=True, *columns)
     v_table.create(engine, checkfirst=True)
     trans.commit()
