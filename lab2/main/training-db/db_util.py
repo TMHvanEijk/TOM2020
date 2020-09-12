@@ -1,30 +1,32 @@
 import pandas as pd
 import sqlalchemy as db
 from sqlalchemy import Column, Float, Table, MetaData, Integer
+from sqlalchemy.ext.declarative import declarative_base
 
-engine = db.create_engine('sqlite:///data/reviews.db', echo=True)
-metadata = MetaData()
+engine = db.create_engine('sqlite:///trainingdata.db', echo=True)
+Base = declarative_base()
+Base.metadata.reflect(engine)
 
-
-def create_variant_table(table_name, column_names):
+def create_tb(table_name, column_names):
     conn = engine.connect()
     trans = conn.begin()
     columns = (Column(name, Float, quote=False) for name in column_names)
-    v_table = Table(table_name, metadata, Column('id', Integer, primary_key=True, autoincrement=True), *columns)
+    v_table = Table(table_name, Column('id', Integer, primary_key=True, autoincrement=True),
+                    extend_existing=True, *columns)
     v_table.create(engine, checkfirst=True)
     trans.commit()
 
 
-def drop_variant_table(table_name):
+def drop_tb(table_name):
     conn = engine.connect()
     trans = conn.begin()
-    v_table = metadata.tables[table_name]
+    v_table = Base.metadata.tables[table_name]
     v_table.drop(engine, checkfirst=True)
     trans.commit()
 
 
 def add_data_records(table_name, records):
-    v_table = metadata.tables[table_name]
+    v_table = Base.metadata.tables[table_name]
     query = db.insert(v_table)
     connection = engine.connect()
     trans = connection.begin()
@@ -33,7 +35,7 @@ def add_data_records(table_name, records):
 
 
 def read_data_records(table_name):
-    v_table = metadata.tables[table_name]
+    v_table = Base.metadata.tables[table_name]
     connection = engine.connect()
     trans = connection.begin()
     query = db.select([v_table])
