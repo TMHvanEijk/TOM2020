@@ -1,6 +1,8 @@
+import os
 import pandas as pd
-from flask import Flask, json, request, Response
 import requests
+from flask import Flask, json, Response
+
 import model_trainer
 
 app = Flask(__name__)
@@ -9,7 +11,8 @@ app.config["DEBUG"] = True
 
 @app.route('/training-cp/<model>', methods=['POST'])
 def train_models(model):
-    r = requests.get('http://localhost:5000/training-db/diabetes')
+    db_api = os.environ['TRAIN_DB_API']
+    r = requests.get(db_api)
     j = r.json()
     df = pd.DataFrame.from_dict(j)
     if model == "mlp":
