@@ -1,11 +1,10 @@
-# load and evaluate a saved model
 import json
 import os
 
 from keras.models import load_model
 
 
-# load model
+# make prediction
 def predict(dataset):
     model_repo = os.environ['MODEL_REPO']
     if model_repo:

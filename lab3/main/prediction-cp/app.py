@@ -1,7 +1,7 @@
 import pandas as pd
 from flask import Flask, json, request, Response
 
-import predictor
+from resources import predictor
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
