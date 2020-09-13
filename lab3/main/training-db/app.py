@@ -1,6 +1,6 @@
 from flask import Flask, json, request, Response
 
-from db_util import drop_tb, add_data_records, read_data_records, create_tb
+from resources.db_util import drop_tb, add_data_records, read_data_records, create_tb
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
@@ -24,7 +24,7 @@ def delete_table(table_name):
 def update_data(table_name):
     content = request.get_json()
     add_data_records(table_name, content)
-    return json.dumps({'message': 'variant data are updated'}, sort_keys=False, indent=4), 200
+    return json.dumps({'message': 'training data were updated'}, sort_keys=False, indent=4), 200
 
 
 @app.route('/training-db/<table_name>', methods=['GET'])
