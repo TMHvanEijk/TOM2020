@@ -23,4 +23,4 @@ def predict_perf(model):
                           sort_keys=False, indent=4), 400
 
 
-app.run(host='0.0.0.0', port=5002)
+app.run(host='0.0.0.0', port=5000)
