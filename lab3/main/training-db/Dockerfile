@@ -10,6 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 # Expose the port that our app runs in
 EXPOSE 5000
+#Add somemeta data if nessary
+LABEL training.db.api="0.0.1-beta"
 # Run our App
 CMD ["python3","app.py"]
 
