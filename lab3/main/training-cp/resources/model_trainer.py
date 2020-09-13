@@ -27,7 +27,7 @@ def train(dataset):
         "accuracy:": scores[1],
         "loss": scores[0],
     }
-
+    # Saving model in a given location (provided as an env. variable
     model_repo = os.environ['MODEL_REPO']
     if model_repo:
         file_path = os.path.join(model_repo, "model.h5")

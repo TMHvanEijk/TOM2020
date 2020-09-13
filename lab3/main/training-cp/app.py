@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 from flask import Flask, json, Response
 
-import model_trainer
+from resources import model_trainer
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
