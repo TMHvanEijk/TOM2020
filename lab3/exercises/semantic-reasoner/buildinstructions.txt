@@ -1,0 +1,5 @@
+sudo docker build -t semantic-web-img .
+sudo docker run -p 8080:8080 -d --name=semantic-web semantic-web-img
+sudo docker start semantic-web
+
+http://{ip}:8080/reasoner-api/v0.6/testReasoner

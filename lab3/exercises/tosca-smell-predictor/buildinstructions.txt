@@ -1,0 +1,5 @@
+sudo docker build -t tosca-smell-img .
+sudo docker run -p 8081:8080 -d --name=tosca-smell tosca-smell-img
+sudo docker start tosca-smell
+
+http://{ip}:8080/reasoner-api/v0.6/testReasoner

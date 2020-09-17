@@ -1,0 +1,6 @@
+sudo docker network create sodalite_network
+
+sudo docker network connect sodalite_network semantic-web
+sudo docker network connect sodalite_network tosca-smell
+sudo docker network connect sodalite_network graph-db
+

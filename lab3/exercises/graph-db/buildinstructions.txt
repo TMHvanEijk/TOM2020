@@ -1,0 +1,5 @@
+sudo docker build -t graph-db-img .
+sudo docker run -p 7200:7200 -d --name=graph-db graph-db-img
+sudo docker start graph-db
+
+http://{ip}:7200/
