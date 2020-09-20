@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: training-db
-  name: training-db-deployment
+  name: training-db
   namespace: mpapps
 spec:
   replicas: 2 # Creating two PODs for our app
@@ -20,7 +20,7 @@ spec:
         name: dbAPI     # POD name
         volumeMounts:
           - mountPath: /data/tdb
-            name: trainingdb
+            name: training-db-vol
         ports:
         - containerPort: 5000
           protocol: TCP
@@ -28,7 +28,7 @@ spec:
           - name: DB_LOC
             value: /data/tdb
       volumes:
-        - name: trainingdb
+        - name: training-db-vol
           persistentVolumeClaim:
             claimName: nfs-data
 
