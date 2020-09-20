@@ -1,8 +1,9 @@
+import os
+
 import pandas as pd
 import sqlalchemy as db
 from sqlalchemy import Column, Float, Table, Integer
 from sqlalchemy.ext.declarative import declarative_base
-import os
 
 
 class DBUtil:
