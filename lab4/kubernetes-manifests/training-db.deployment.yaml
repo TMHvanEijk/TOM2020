@@ -4,7 +4,7 @@ metadata:
   labels:
     app: training-db
   name: training-db
-  namespace: mpapps
+  namespace: myapps
 spec:
   replicas: 2 # Creating two PODs for our app
   selector:
@@ -37,7 +37,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: nfs-data
-  namespace: mpapps
+  namespace: myapps
 spec:
   accessModes:
   - ReadWriteMany
