@@ -1,2 +1,14 @@
 apiVersion: v1
-kind: Pod
+kind: Service
+metadata:
+  name: training-db-service
+  labels:
+    app: training-db
+  namespace: mlops
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 5000
+    targetPort: 5000
+  selector:
+    app: training-db
