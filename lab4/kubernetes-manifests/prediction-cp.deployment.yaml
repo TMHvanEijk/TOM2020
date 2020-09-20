@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: prediction-cp
+  name: prediction-cp
+  namespace: myapps
+spec:
+  replicas: 2 # Creating two PODs for our app
+  selector:
+    matchLabels:
+      app: prediction-cp
+  template:
+    metadata:
+      labels:
+        app: prediction-cp
+    spec:
+      containers:
+      - image: gcr.io/de2020/predictionapi:0.0.1 # Docker image name, that we pushed to GCR
+        name: prediction-cp-api     # POD name
+        volumeMounts:
+          - mountPath: /data/models
+            name: model-repo
+        ports:
+        - containerPort: 5000
+          protocol: TCP
+        env:
+          - name: MODEL_REPO
+            value: /data/models
+      volumes:
+        - name: model-repo
+          persistentVolumeClaim:
+            claimName: nfs-model-repo
