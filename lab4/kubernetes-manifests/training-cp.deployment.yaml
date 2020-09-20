@@ -19,14 +19,14 @@ spec:
       - image: gcr.io/de2020/trainapi:0.0.1 # Docker image name, that we pushed to GCR
         name: training-cp-api     # POD name
         volumeMounts:
-          - mountPath: /data/models
+          - mountPath: /usr/src/models
             name: model-repo
         ports:
         - containerPort: 5000
           protocol: TCP
         env:
           - name: MODEL_REPO
-            value: /data/models
+            value: /usr/src/models
           - name: TRAIN_DB_API
             value: http://training-db-service:5000/training-db/diabetes
       volumes:
