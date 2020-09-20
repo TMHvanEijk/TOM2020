@@ -40,7 +40,7 @@ metadata:
   namespace: myapps
 spec:
   accessModes:
-  - ReadWriteMany
+  - ReadWriteOnce
   resources:
     requests:
       storage: 2Gi
