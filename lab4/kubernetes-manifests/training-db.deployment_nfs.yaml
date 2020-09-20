@@ -20,7 +20,7 @@ spec:
         name: training-db-api     # POD name
         volumeMounts:
           - mountPath: /data/tdb
-            name: training-bd-volume
+            name: training-db-vol
         ports:
         - containerPort: 5000
           protocol: TCP
@@ -28,8 +28,20 @@ spec:
           - name: DB_LOC
             value: /data/tdb
       volumes:
-        - name: training-bd-volume
-          # This GCE PD must already exist.
-          gcePersistentDisk:
-            pdName: training-db-disk
-            fsType: ext4
+        - name: training-db-vol
+          persistentVolumeClaim:
+            claimName: nfs-data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-data
+  namespace: myapps
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: nfs
