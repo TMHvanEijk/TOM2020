@@ -19,14 +19,14 @@ spec:
       - image: gcr.io/de2020/predictionapi:0.0.1 # Docker image name, that we pushed to GCR
         name: prediction-cp-api     # POD name
         volumeMounts:
-          - mountPath: /usr/src/models
-            name: model-repo
+        - mountPath: /usr/src/models
+          name: model-repo
         ports:
         - containerPort: 5000
           protocol: TCP
         env:
-          - name: MODEL_REPO
-            value: /usr/src/models
+        - name: MODEL_REPO
+          value: /usr/src/models
       volumes:
         - name: model-repo
           persistentVolumeClaim:

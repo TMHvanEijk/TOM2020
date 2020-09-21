@@ -19,15 +19,15 @@ spec:
       - image: gcr.io/de2020/trainingdbapi:0.0.1 # Docker image name, that we pushed to GCR
         name: training-db-api     # POD name
         volumeMounts:
-          - mountPath: /usr/src/tdb
-            name: training-db-vol
+        - mountPath: /usr/src/tdb
+          name: training-db-vol
         ports:
         - containerPort: 5000
           protocol: TCP
         env:
-          - name: DB_LOC
-            value: /usr/src/tdb
+        - name: DB_LOC
+          value: /usr/src/tdb
       volumes:
-        - name: training-db-vol
-          persistentVolumeClaim:
-            claimName: nfs-data
+      - name: training-db-vol
+        persistentVolumeClaim:
+          claimName: nfs-data
