@@ -1,0 +1,5 @@
+sudo docker build -t graph-db-img .
+sudo docker tag graph-db-img gcr.io/de2020/graph-db
+sudo docker push gcr.io/de2020/graph-db
+
+http://{ip}:7200/

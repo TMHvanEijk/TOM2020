@@ -1,0 +1,5 @@
+sudo docker build -t semantic-web-img .
+sudo docker tag semantic-web-img gcr.io/de2020/semantic-web
+sudo docker push gcr.io/de2020/semantic-web
+
+http://{ip}:8080/reasoner-api/v0.6/testReasoner

@@ -1,0 +1,6 @@
+sudo docker build -t tosca-smell-img .
+sudo docker tag tosca-smell-img gcr.io/de2020/tosca-smell
+sudo docker push gcr.io/de2020/tosca-smell
+
+
+http://{ip}:8080/reasoner-api/v0.6/testReasoner
