@@ -34,8 +34,8 @@ import setuptools
 
 REQUIRED_PACKAGES = [
     'google-cloud-storage',
+    'tensorflow-transform'
 ]
-
 setuptools.setup(
     name='predictionpl',
     version='0.0.1',
