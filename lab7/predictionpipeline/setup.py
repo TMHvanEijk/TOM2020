@@ -37,9 +37,9 @@ REQUIRED_PACKAGES = [
 ]
 
 setuptools.setup(
-    name='trainingpl',
+    name='predictionpl',
     version='0.0.1',
-    description='Training PL DE 2020 Lab 7.',
+    description='Prediction PL DE 2020 Lab 7.',
     install_requires=REQUIRED_PACKAGES,
     packages=setuptools.find_packages()
 )
