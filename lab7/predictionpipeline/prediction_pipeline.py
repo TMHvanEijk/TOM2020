@@ -20,7 +20,6 @@ from __future__ import absolute_import
 import argparse
 import csv
 import io
-import json
 import logging
 
 import apache_beam as beam
@@ -29,50 +28,39 @@ from apache_beam.io import WriteToText
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
 from google.cloud import storage
-from keras.layers import Dense
-from keras.models import Sequential
+from keras.models import load_model
 
 
-def train_save_model(readable_file, project_id, bucket_name):
+def get_csv_reader(readable_file):
     # Open a channel to read the file from GCS
     gcs_file = beam.io.filesystems.FileSystems.open(readable_file)
 
-    # Read it as csv, you can also use csv.reader
-    csv_dict = csv.DictReader(io.TextIOWrapper(gcs_file))
+    # Return the csv reader
+    return csv.DictReader(io.TextIOWrapper(gcs_file))
 
-    # Create the DataFrame
-    df = pd.DataFrame(csv_dict)
-    df = df.apply(pd.to_numeric)
-    dataset = df.values
 
-    # split into input (X) and output (Y) variables
-    X = dataset[:, 0:8]
-    Y = dataset[:, 8]
-    # define model
-    model = Sequential()
-    model.add(Dense(12, input_dim=8, activation='relu'))
-    model.add(Dense(8, activation='relu'))
-    model.add(Dense(1, activation='sigmoid'))
-    # compile model
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-    # Fit the model
-    model.fit(X, Y, epochs=150, batch_size=10, verbose=0)
-    # evaluate the model
-    scores = model.evaluate(X, Y, verbose=0)
-    print(model.metrics_names)
-    text_out = {
-        "accuracy:": str(scores[1]),
-        "loss": str(scores[0]),
-    }
+class MyPredictDoFn(beam.DoFn):
+    _model = None
 
-    model.save("model.h5")
-    # Save to GCS
-    client = storage.Client(project=project_id)
-    bucket = client.get_bucket(bucket_name)
-    blob = bucket.blob('models/model.h5')
-    blob.upload_from_filename('model.h5')
-    logging.info("Saved the model to GCP bucket")
-    return json.dumps(str(text_out), sort_keys=False, indent=4)
+    def setup(self):
+        logging.info("MyPredictDoFn initialisation")
+        client = storage.Client(project="de2020")
+        bucket = client.get_bucket('de2020labs')
+        blob = bucket.blob('models/model.h5')
+        blob.download_to_filename('downloaded_model.h5')
+        self._model = load_model('downloaded_model.h5')
+
+    def process(self, element, **kwargs):
+        df = pd.DataFrame.from_dict(element,
+                                    orient="index").transpose().fillna(0)
+        df = df.apply(pd.to_numeric)
+        val_set2 = df.copy()
+        logging.info(val_set2)
+        result = self._model.predict(df)
+        y_classes = result.argmax(axis=-1)
+        val_set2['class'] = y_classes.tolist()
+        dic = val_set2.to_dict(orient='records')
+        return [dic]
 
 
 def run(argv=None, save_main_session=True):
@@ -83,17 +71,7 @@ def run(argv=None, save_main_session=True):
         dest='input',
         default='gs://dataflow-samples/data/kinglear.txt',
         help='Input file to process.')
-    parser.add_argument(
-        '--output',
-        dest='output',
-        # CHANGE 1/6: The Google Cloud Storage path is required
-        # for outputting the results.
-        default='gs://YOUR_OUTPUT_BUCKET/AND_OUTPUT_PREFIX',
-        help='Output file to write results to.')
-    parser.add_argument(
-        '--mbucket',
-        dest='mbucket',
-        help='model bucket name')
+
     known_args, pipeline_args = parser.parse_known_args(argv)
 
     # We use the save_main_session option because one or more DoFn's in this
@@ -103,10 +81,12 @@ def run(argv=None, save_main_session=True):
 
     # The pipeline will be run on exiting the with block.
     with beam.Pipeline(options=pipeline_options) as p:
-        output = (p | 'Create FileName Object' >> beam.Create([known_args.input])
-                  | 'TrainAndSaveModel' >> beam.FlatMap(train_save_model, pipeline_args.project, known_args.mbucket)
+        # Read the text file[pattern] into a PCollection.
+        prediction_data = (p | 'CreatePCollection' >> beam.Create([known_args.input])
+                           | 'ReadCSVFle' >> beam.FlatMap(get_csv_reader))
+        output = (prediction_data | 'Predict' >> beam.ParDo(MyPredictDoFn())
                   )
-        output | 'Write' >> WriteToText(known_args.output)
+        output | 'WritePR' >> WriteToText("gs://de2020labs/predictionresults")
 
 
 if __name__ == '__main__':
