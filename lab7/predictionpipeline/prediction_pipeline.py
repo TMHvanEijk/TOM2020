@@ -27,7 +27,8 @@ import pandas as pd
 from apache_beam.io import WriteToText
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
-
+from google.cloud import storage
+from keras.models import load_model
 
 def get_csv_reader(readable_file):
     # Open a channel to read the file from GCS
@@ -45,8 +46,6 @@ class MyPredictDoFn(beam.DoFn):
         self._bucket_name = bucket_name
 
     def setup(self):
-        from google.cloud import storage
-        from keras.models import load_model
         logging.info("MyPredictDoFn initialisation. Load Model")
         client = storage.Client(project=self._project_id)
         bucket = client.get_bucket(self._bucket_name)
