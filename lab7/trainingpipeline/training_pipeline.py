@@ -90,6 +90,12 @@ def run(argv=None, save_main_session=True):
         # for outputting the results.
         default='gs://YOUR_OUTPUT_BUCKET/AND_OUTPUT_PREFIX',
         help='Output file to write results to.')
+
+    parser.add_argument(
+        '--projectid',
+        dest='projectid',
+        help='project id')
+
     parser.add_argument(
         '--mbucket',
         dest='mbucket',
@@ -104,7 +110,7 @@ def run(argv=None, save_main_session=True):
     # The pipeline will be run on exiting the with block.
     with beam.Pipeline(options=pipeline_options) as p:
         output = (p | 'Create FileName Object' >> beam.Create([known_args.input])
-                  | 'TrainAndSaveModel' >> beam.FlatMap(train_save_model, pipeline_args.project, known_args.mbucket)
+                  | 'TrainAndSaveModel' >> beam.FlatMap(train_save_model, known_args.projectid, known_args.mbucket)
                   )
         output | 'Write' >> WriteToText(known_args.output)
 
