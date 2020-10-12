@@ -92,8 +92,8 @@ def run(argv=None, save_main_session=True):
         help='Output file to write results to.')
 
     parser.add_argument(
-        '--projectid',
-        dest='projectid',
+        '--pid',
+        dest='pid',
         help='project id')
 
     parser.add_argument(
@@ -101,7 +101,8 @@ def run(argv=None, save_main_session=True):
         dest='mbucket',
         help='model bucket name')
     known_args, pipeline_args = parser.parse_known_args(argv)
-
+    print(known_args)
+    print(pipeline_args)
     # We use the save_main_session option because one or more DoFn's in this
     # workflow rely on global context (e.g., a module imported at module level).
     pipeline_options = PipelineOptions(pipeline_args)
@@ -110,7 +111,7 @@ def run(argv=None, save_main_session=True):
     # The pipeline will be run on exiting the with block.
     with beam.Pipeline(options=pipeline_options) as p:
         output = (p | 'Create FileName Object' >> beam.Create([known_args.input])
-                  | 'TrainAndSaveModel' >> beam.FlatMap(train_save_model, known_args.projectid, known_args.mbucket)
+                  | 'TrainAndSaveModel' >> beam.FlatMap(train_save_model, known_args.pid, known_args.mbucket)
                   )
         output | 'Write' >> WriteToText(known_args.output)
 

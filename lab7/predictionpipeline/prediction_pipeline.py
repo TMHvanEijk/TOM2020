@@ -27,8 +27,6 @@ import pandas as pd
 from apache_beam.io import WriteToText
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
-from google.cloud import storage
-from keras.models import load_model
 
 
 def get_csv_reader(readable_file):
@@ -40,12 +38,18 @@ def get_csv_reader(readable_file):
 
 
 class MyPredictDoFn(beam.DoFn):
-    _model = None
+
+    def __init__(self, project_id, bucket_name):
+        self._model = None
+        self._project_id = project_id
+        self._bucket_name = bucket_name
 
     def setup(self):
+        from google.cloud import storage
+        from keras.models import load_model
         logging.info("MyPredictDoFn initialisation")
-        client = storage.Client(project="de2020")
-        bucket = client.get_bucket('de2020labs')
+        client = storage.Client(project=self._project_id)
+        bucket = client.get_bucket(self._bucket_name)
         blob = bucket.blob('models/model.h5')
         blob.download_to_filename('downloaded_model.h5')
         self._model = load_model('downloaded_model.h5')
@@ -72,6 +76,22 @@ def run(argv=None, save_main_session=True):
         default='gs://dataflow-samples/data/kinglear.txt',
         help='Input file to process.')
 
+    parser.add_argument(
+        '--output',
+        dest='output',
+        # CHANGE 1/6: The Google Cloud Storage path is required
+        # for outputting the results.
+        default='gs://YOUR_OUTPUT_BUCKET/AND_OUTPUT_PREFIX',
+        help='Output file to write results to.')
+    parser.add_argument(
+        '--pid',
+        dest='pid',
+        help='project id')
+
+    parser.add_argument(
+        '--mbucket',
+        dest='mbucket',
+        help='model bucket name')
     known_args, pipeline_args = parser.parse_known_args(argv)
 
     # We use the save_main_session option because one or more DoFn's in this
@@ -86,7 +106,7 @@ def run(argv=None, save_main_session=True):
                            | 'ReadCSVFle' >> beam.FlatMap(get_csv_reader))
         output = (prediction_data | 'Predict' >> beam.ParDo(MyPredictDoFn())
                   )
-        output | 'WritePR' >> WriteToText("gs://de2020labs/predictionresults")
+        output | 'WritePR' >> WriteToText(known_args.output)
 
 
 if __name__ == '__main__':
