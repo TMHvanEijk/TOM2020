@@ -47,7 +47,7 @@ class MyPredictDoFn(beam.DoFn):
     def setup(self):
         from google.cloud import storage
         from keras.models import load_model
-        logging.info("MyPredictDoFn initialisation")
+        logging.info("MyPredictDoFn initialisation. Load Model")
         client = storage.Client(project=self._project_id)
         bucket = client.get_bucket(self._bucket_name)
         blob = bucket.blob('models/model.h5')
@@ -104,8 +104,8 @@ def run(argv=None, save_main_session=True):
         # Read the text file[pattern] into a PCollection.
         prediction_data = (p | 'CreatePCollection' >> beam.Create([known_args.input])
                            | 'ReadCSVFle' >> beam.FlatMap(get_csv_reader))
-        output = (prediction_data | 'Predict' >> beam.ParDo(MyPredictDoFn())
-                  )
+        output = (prediction_data | 'Predict' >> beam.ParDo(MyPredictDoFn(project_id=known_args.pid,
+                                                                          bucket_name=known_args.mbucket)))
         output | 'WritePR' >> WriteToText(known_args.output)
 
 
