@@ -124,7 +124,6 @@ class ParseGameEventFn(beam.DoFn):
         self.num_parse_errors = Metrics.counter(self.__class__, 'num_parse_errors')
 
     def process(self, elem):
-        print(elem)
         try:
             row = list(csv.reader([elem]))[0]
             yield {
@@ -299,25 +298,34 @@ def run(argv=None, save_main_session=True):
                 | 'AddEventTimestamps' >> beam.Map(
             lambda elem: beam.window.TimestampedValue(elem, elem['timestamp'])))
 
+        def format_team_score_sums(team_score):
+            team = team_score['team']
+            score = team_score['total_score']
+            print(team_score)
+            return '%s: %d' % (team, score)
+
         # Get team scores and write the results to BigQuery
         (  # pylint: disable=expression-not-assigned
                 events
                 | 'CalculateTeamScores' >> CalculateTeamScores(
             args.team_window_duration, args.allowed_lateness)
                 | 'TeamScoresDict' >> beam.ParDo(TeamScoresDict())
-                | 'WriteTeamScoreSums' >> beam.io.WriteToText(args.output1))
+                | 'FormatTeamScoreSums' >> beam.Map(format_team_score_sums)
+                | 'EncodeTeamScoreSums' >> beam.Map(lambda x: x.encode('utf-8')).with_output_types(bytes)
+                | 'WriteTeamScoreSums' >> beam.io.WriteToPubSub(args.output1))
 
         def format_user_score_sums(user_score):
             (user, score) = user_score
             print(user_score)
-            return {'user': user, 'total_score': score}
+            return '%s: %d' % (user, score)
 
         # Get user scores and write the results to BigQuery
         (  # pylint: disable=expression-not-assigned
                 events
                 | 'CalculateUserScores' >> CalculateUserScores(args.allowed_lateness)
                 | 'FormatUserScoreSums' >> beam.Map(format_user_score_sums)
-                | 'WriteUserScoreSums' >> beam.io.WriteToText(args.output2))
+                | 'EncodeUserScoreSums' >> beam.Map(lambda x: x.encode('utf-8')).with_output_types(bytes)
+                | 'WriteUserScoreSums' >> beam.io.WriteToPubSub(args.output2))
 
 
 if __name__ == '__main__':

@@ -50,6 +50,7 @@ def create_subscription(project_id, topic_id, subscription_id):
     print(f"Subscription created: {subscription}")
     # [END pubsub_create_pull_subscription]
 
+
 def read_data(project_id, subscription_id):
     """Create a new pull subscription on the given topic."""
     # [START pubsub_create_pull_subscription]
@@ -59,8 +60,6 @@ def read_data(project_id, subscription_id):
     # project_id = "your-project-id"
     # topic_id = "your-topic-id"
     # subscription_id = "your-subscription-id"
-
-
 
     # project_id = "your-project-id"
     # subscription_id = "your-subscription-id"
@@ -92,5 +91,7 @@ def read_data(project_id, subscription_id):
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
-    # create_subscription("de2020", "game_data", "sub1")
-    read_data("de2020","sub1")
+    create_subscription("de2020", "game_data", "sub1")
+    create_subscription("de2020", "teamscore", "teamscore_sub1")
+    create_subscription("de2020", "userscore", "userscore_sub1")
+    read_data("de2020", "userscore_sub1")
