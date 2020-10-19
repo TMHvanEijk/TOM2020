@@ -235,13 +235,13 @@ def run(argv=None, save_main_session=True):
     parser.add_argument(
         '--team_window_duration',
         type=int,
-        default=1,
+        default=5,
         help='Numeric value of fixed window duration for team '
              'analysis, in minutes')
     parser.add_argument(
         '--allowed_lateness',
         type=int,
-        default=2,
+        default=10,
         help='Numeric value of allowed data lateness, in minutes')
 
     args, pipeline_args = parser.parse_known_args(argv)
@@ -256,6 +256,7 @@ def run(argv=None, save_main_session=True):
     options.view_as(StandardOptions).streaming = True
 
     with beam.Pipeline(options=options) as p:
+        # Pre-processing
         events = (
                 p
                 | 'ReadInputText' >> beam.io.ReadFromText(args.input)
@@ -263,7 +264,7 @@ def run(argv=None, save_main_session=True):
                 | 'AddEventTimestamps' >> beam.Map(
             lambda elem: beam.window.TimestampedValue(elem, elem['timestamp'])))
 
-        # Get team scores and write the results to BigQuery
+        # Get team scores and write the results to the file system
         (  # pylint: disable=expression-not-assigned
                 events
                 | 'CalculateTeamScores' >> CalculateTeamScores(
@@ -275,7 +276,7 @@ def run(argv=None, save_main_session=True):
             (user, score) = user_score
             return {'user': user, 'total_score': score}
 
-        # Get user scores and write the results to BigQuery
+        # Get user scores and write the results to the file system
         (  # pylint: disable=expression-not-assigned
                 events
                 | 'CalculateUserScores' >> CalculateUserScores(args.allowed_lateness)
