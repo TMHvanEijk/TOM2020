@@ -192,9 +192,6 @@ class CalculateTeamScores(beam.PTransform):
         self.allowed_lateness_seconds = allowed_lateness * 60
 
     def expand(self, pcoll):
-        # NOTE: the behavior does not exactly match the Java example
-        # TODO: allowed_lateness not implemented yet in FixedWindows
-        # TODO: AfterProcessingTime not implemented yet, replace AfterCount
         return (
                 pcoll
                 # We will get early (speculative) results as well as cumulative
@@ -203,7 +200,8 @@ class CalculateTeamScores(beam.PTransform):
             beam.window.FixedWindows(self.team_window_duration),
             trigger=trigger.AfterWatermark(
                 trigger.AfterCount(10), trigger.AfterCount(20)),
-            accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
+            accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
+            allowed_lateness=self.allowed_lateness_seconds)
                 # Extract and sum teamname/score pairs from the event data.
                 | 'ExtractAndSumScore' >> ExtractAndSumScore('team'))
 
@@ -224,16 +222,14 @@ class CalculateUserScores(beam.PTransform):
         self.allowed_lateness_seconds = allowed_lateness * 60
 
     def expand(self, pcoll):
-        # NOTE: the behavior does not exactly match the Java example
-        # TODO: allowed_lateness not implemented yet in FixedWindows
-        # TODO: AfterProcessingTime not implemented yet, replace AfterCount
         return (
                 pcoll
                 # Get periodic results every ten events.
                 | 'LeaderboardUserGlobalWindows' >> beam.WindowInto(
             beam.window.GlobalWindows(),
             trigger=trigger.Repeatedly(trigger.AfterCount(10)),
-            accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
+            accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
+            allowed_lateness=self.allowed_lateness_seconds)
                 # Extract and sum username/score pairs from the event data.
                 | 'ExtractAndSumScore' >> ExtractAndSumScore('user'))
 
@@ -247,9 +243,9 @@ def run(argv=None, save_main_session=True):
 
     parser.add_argument('--topic', type=str, help='Pub/Sub topic to read from')
     parser.add_argument(
-        '--output1', type=str, required=True, help='Path to the output 1 file(s).')
+        '--output_team', type=str, required=True, help='Pub/Sub topic to write team score')
     parser.add_argument(
-        '--output2', type=str, required=True, help='Path to the output 2 file(s).')
+        '--output_user', type=str, required=True, help='Pub/Sub topic to write user score.')
     parser.add_argument(
         '--subscription', type=str, help='Pub/Sub subscription to read from')
     parser.add_argument(
@@ -304,7 +300,7 @@ def run(argv=None, save_main_session=True):
             print(team_score)
             return '%s: %d' % (team, score)
 
-        # Get team scores and write the results to BigQuery
+        # Get team scores and write the results to the topic output_team
         (  # pylint: disable=expression-not-assigned
                 events
                 | 'CalculateTeamScores' >> CalculateTeamScores(
@@ -312,20 +308,20 @@ def run(argv=None, save_main_session=True):
                 | 'TeamScoresDict' >> beam.ParDo(TeamScoresDict())
                 | 'FormatTeamScoreSums' >> beam.Map(format_team_score_sums)
                 | 'EncodeTeamScoreSums' >> beam.Map(lambda x: x.encode('utf-8')).with_output_types(bytes)
-                | 'WriteTeamScoreSums' >> beam.io.WriteToPubSub(args.output1))
+                | 'WriteTeamScoreSums' >> beam.io.WriteToPubSub(args.output_team))
 
         def format_user_score_sums(user_score):
             (user, score) = user_score
             print(user_score)
             return '%s: %d' % (user, score)
 
-        # Get user scores and write the results to BigQuery
+        # Get user scores and write the results to the topic output_user
         (  # pylint: disable=expression-not-assigned
                 events
                 | 'CalculateUserScores' >> CalculateUserScores(args.allowed_lateness)
                 | 'FormatUserScoreSums' >> beam.Map(format_user_score_sums)
                 | 'EncodeUserScoreSums' >> beam.Map(lambda x: x.encode('utf-8')).with_output_types(bytes)
-                | 'WriteUserScoreSums' >> beam.io.WriteToPubSub(args.output2))
+                | 'WriteUserScoreSums' >> beam.io.WriteToPubSub(args.output_user))
 
 
 if __name__ == '__main__':

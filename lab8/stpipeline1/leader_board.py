@@ -158,39 +158,6 @@ class TeamScoresDict(beam.DoFn):
         }
 
 
-class WriteToBigQuery(beam.PTransform):
-    """Generate, format, and write BigQuery table row information."""
-
-    def __init__(self, table_name, dataset, schema, project):
-        """Initializes the transform.
-        Args:
-          table_name: Name of the BigQuery table to use.
-          dataset: Name of the dataset to use.
-          schema: Dictionary in the format {'column_name': 'bigquery_type'}
-          project: Name of the Cloud project containing BigQuery table.
-        """
-        # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
-        # super(WriteToBigQuery, self).__init__()
-        beam.PTransform.__init__(self)
-        self.table_name = table_name
-        self.dataset = dataset
-        self.schema = schema
-        self.project = project
-
-    def get_schema(self):
-        """Build the output table schema."""
-        return ', '.join('%s:%s' % (col, self.schema[col]) for col in self.schema)
-
-    def expand(self, pcoll):
-        return (
-                pcoll
-                | 'ConvertToRow' >>
-                beam.Map(lambda elem: {col: elem[col]
-                                       for col in self.schema})
-                | beam.io.WriteToBigQuery(
-            self.table_name, self.dataset, self.project, self.get_schema()))
-
-
 # [START window_and_trigger]
 class CalculateTeamScores(beam.PTransform):
     """Calculates scores for each team within the configured window duration.
@@ -207,7 +174,6 @@ class CalculateTeamScores(beam.PTransform):
         self.allowed_lateness_seconds = allowed_lateness * 60
 
     def expand(self, pcoll):
-        # NOTE: the behavior does not exactly match the Java example
         return (
                 pcoll
                 # We will get early (speculative) results as well as cumulative
@@ -216,7 +182,8 @@ class CalculateTeamScores(beam.PTransform):
             beam.window.FixedWindows(self.team_window_duration),
             trigger=trigger.AfterWatermark(
                 trigger.AfterCount(10), trigger.AfterCount(20)),
-            accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
+            accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
+            allowed_lateness=self.allowed_lateness_seconds)
                 # Extract and sum teamname/score pairs from the event data.
                 | 'ExtractAndSumScore' >> ExtractAndSumScore('team'))
 
@@ -237,14 +204,14 @@ class CalculateUserScores(beam.PTransform):
         self.allowed_lateness_seconds = allowed_lateness * 60
 
     def expand(self, pcoll):
-        # NOTE: the behavior does not exactly match the Java example
         return (
                 pcoll
                 # Get periodic results every ten events.
                 | 'LeaderboardUserGlobalWindows' >> beam.WindowInto(
             beam.window.GlobalWindows(),
             trigger=trigger.Repeatedly(trigger.AfterCount(10)),
-            accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
+            accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
+            allowed_lateness=self.allowed_lateness_seconds)
                 # Extract and sum username/score pairs from the event data.
                 | 'ExtractAndSumScore' >> ExtractAndSumScore('user'))
 
@@ -268,13 +235,13 @@ def run(argv=None, save_main_session=True):
     parser.add_argument(
         '--team_window_duration',
         type=int,
-        default=60,
+        default=1,
         help='Numeric value of fixed window duration for team '
              'analysis, in minutes')
     parser.add_argument(
         '--allowed_lateness',
         type=int,
-        default=120,
+        default=2,
         help='Numeric value of allowed data lateness, in minutes')
 
     args, pipeline_args = parser.parse_known_args(argv)
