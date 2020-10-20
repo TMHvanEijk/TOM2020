@@ -50,5 +50,5 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
     # create_subscription("de2020", "game_data", "sub1")
     # create_subscription("de2020", "teamscore", "teamscore_sub1")
-    create_subscription("de2020", "userscore", "userscore_sub1")
+    # create_subscription("de2020", "userscore", "userscore_sub1")
     read_data("de2020", "userscore_sub1")

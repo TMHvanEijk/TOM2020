@@ -292,13 +292,13 @@ def run(argv=None, save_main_session=True):
     parser.add_argument(
         '--team_window_duration',
         type=int,
-        default=60,
+        default=3,
         help='Numeric value of fixed window duration for team '
              'analysis, in minutes')
     parser.add_argument(
         '--allowed_lateness',
         type=int,
-        default=120,
+        default=6,
         help='Numeric value of allowed data lateness, in minutes')
 
     args, pipeline_args = parser.parse_known_args(argv)
