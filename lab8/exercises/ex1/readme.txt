@@ -1,0 +1,1 @@
+## original and complete data set at https://github.com/databricks/Spark-The-Definitive-Guide/tree/master/data/activity-data

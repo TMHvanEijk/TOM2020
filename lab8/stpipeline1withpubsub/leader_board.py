@@ -196,12 +196,11 @@ class CalculateTeamScores(beam.PTransform):
                 pcoll
                 # We will get early (speculative) results as well as cumulative
                 # processing of late data.
+                # TODO: allowed_lateness not implemented yet in FixedWindows -python beam
+                # TODO: AfterProcessingTime not implemented yet, replace AfterCount-python beam
                 | 'LeaderboardTeamFixedWindows' >> beam.WindowInto(
             beam.window.FixedWindows(self.team_window_duration),
-            trigger=trigger.AfterWatermark(
-                trigger.AfterCount(10), trigger.AfterCount(20)),
-            accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
-            allowed_lateness=self.allowed_lateness_seconds)
+            accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
                 # Extract and sum teamname/score pairs from the event data.
                 | 'ExtractAndSumScore' >> ExtractAndSumScore('team'))
 
@@ -228,8 +227,7 @@ class CalculateUserScores(beam.PTransform):
                 | 'LeaderboardUserGlobalWindows' >> beam.WindowInto(
             beam.window.GlobalWindows(),
             trigger=trigger.Repeatedly(trigger.AfterCount(10)),
-            accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
-            allowed_lateness=self.allowed_lateness_seconds)
+            accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
                 # Extract and sum username/score pairs from the event data.
                 | 'ExtractAndSumScore' >> ExtractAndSumScore('user'))
 
