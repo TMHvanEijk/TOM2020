@@ -1,0 +1,3 @@
+python leader_board2.py --input gs://de2020labs2/gamedata/*.* --output1 gs://de2020labs2/teams/scores --output2 gs://de2020labs2/users/scores --runner DataflowRunner --project de2020 --temp_location gs://de2020labs2/tmp/ --job_name loadboradstream1 --region us-central1 --experiments=allow_non_updatable_job parameter
+
+python leader_board3.py --input gs://de2020labs2/gamedata/*.* --output1 gs://de2020labs2/teams/scores --output2 gs://de2020labs2/users/scores --runner DataflowRunner --project de2020 --temp_location gs://de2020labs2/tmp/ --job_name loadboradbatch1 --region us-central1
