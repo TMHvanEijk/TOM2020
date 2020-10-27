@@ -98,6 +98,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
 from apache_beam.options.pipeline_options import StandardOptions
 from apache_beam.transforms import trigger
+import apache_beam.transforms.window as window
 
 
 def timestamp2str(t, fmt='%Y-%m-%d %H:%M:%S.000'):
@@ -199,7 +200,7 @@ class CalculateTeamScores(beam.PTransform):
                 # TODO: allowed_lateness not implemented yet in FixedWindows -python beam
                 # TODO: AfterProcessingTime not implemented yet, replace AfterCount-python beam
                 | 'LeaderboardTeamFixedWindows' >> beam.WindowInto(
-            beam.window.FixedWindows(self.team_window_duration),
+            window.FixedWindows(5),
             accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
                 # Extract and sum teamname/score pairs from the event data.
                 | 'ExtractAndSumScore' >> ExtractAndSumScore('team'))
@@ -225,7 +226,7 @@ class CalculateUserScores(beam.PTransform):
                 pcoll
                 # Get periodic results every ten events.
                 | 'LeaderboardUserGlobalWindows' >> beam.WindowInto(
-            beam.window.GlobalWindows(),
+            window.GlobalWindows(),
             trigger=trigger.Repeatedly(trigger.AfterCount(10)),
             accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
                 # Extract and sum username/score pairs from the event data.
@@ -249,13 +250,13 @@ def run(argv=None, save_main_session=True):
     parser.add_argument(
         '--team_window_duration',
         type=int,
-        default=3,
+        default=0.5,
         help='Numeric value of fixed window duration for team '
              'analysis, in minutes')
     parser.add_argument(
         '--allowed_lateness',
         type=int,
-        default=6,
+        default=0.5,
         help='Numeric value of allowed data lateness, in minutes')
 
     args, pipeline_args = parser.parse_known_args(argv)

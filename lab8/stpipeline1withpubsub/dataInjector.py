@@ -35,7 +35,7 @@ def publish_messages(project_id, topic_id, data_file):
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
-    # create_topic("de2020", "game_data")
+    create_topic("de2020", "game_data")
     # create_topic("de2020", "teamscore")
     # create_topic("de2020", "userscore")
     publish_messages("de2020", "game_data", "C:\Postdoc\DE2020\DE2020\lab8\stpipeline1withpubsub\data\game")
