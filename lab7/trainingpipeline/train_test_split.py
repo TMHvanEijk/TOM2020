@@ -28,9 +28,9 @@ from apache_beam.options.pipeline_options import SetupOptions
 
 
 # see https://beam.apache.org/documentation/transforms/python/elementwise/partition/
-def split_dataset(plant, num_partitions, ratio):
+def split_dataset(dataset, num_partitions, ratio):
     assert num_partitions == len(ratio)
-    bucket = sum(map(ord, json.dumps(plant))) % sum(ratio)
+    bucket = sum(map(ord, json.dumps(dataset))) % sum(ratio)
     total = 0
     for i, part in enumerate(ratio):
         total += part
