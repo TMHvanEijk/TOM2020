@@ -93,6 +93,8 @@ def run(argv=None, save_main_session=True):
 
     # The pipeline will be run on exiting the with block.
     with beam.Pipeline(options=pipeline_options) as p:
+        # Note First try the query in the BigQuery to see if it works
+        # [your_project_id.your_dataset_name.your_table_name]  , e.g., de2020.mydataset.diabetes
         train_dataset = (p | 'QueryTable' >> beam.io.Read(beam.io.BigQuerySource(
             query='SELECT * FROM `de2020.mydataset.diabetes`',
             use_standard_sql=True)))
