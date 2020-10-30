@@ -31,7 +31,7 @@ from keras.models import Sequential
 
 
 def train_save_model(modelname, traindata):
-    field_list = ['ntp', 'pgc', 'dbp', 'tsft', 'si', 'bmi', 'dpf', 'age', 'class']
+
     print(type(traindata))
     for line in traindata:
         print(line)
