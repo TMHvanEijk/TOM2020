@@ -18,13 +18,12 @@
 from __future__ import absolute_import
 
 import argparse
-import csv
 import json
 import logging
 
 import apache_beam as beam
 import pandas as pd
-from apache_beam.io import WriteToText, ReadFromText
+from apache_beam.io import WriteToText
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
 from keras.layers import Dense
@@ -36,11 +35,8 @@ def train_save_model(modelname, traindata):
     print(type(traindata))
     for line in traindata:
         print(line)
-
-    csv_dict = csv.DictReader(traindata, field_list)
-
     # Create the DataFrame
-    df = pd.DataFrame(csv_dict)
+    df = pd.DataFrame(traindata)
     df = df.apply(pd.to_numeric)
     dataset = df.values
     print(dataset)
@@ -80,30 +76,27 @@ def split_dataset(plant, num_partitions, ratio):
 def order_dict_to_csv(odict):
     return ''.join(odict.values())
 
-def printelement(element):
-    print(type(element))
-    print(element)
-    return element
 
 def run(argv=None, save_main_session=True):
     """Main entry point; defines and runs the wordcount pipeline."""
     parser = argparse.ArgumentParser()
+
     known_args, pipeline_args = parser.parse_known_args(argv)
 
-    # We use the save_main_session option because one or more DoFn's in this
-    # workflow rely on global context (e.g., a module imported at module level).
-    pipeline_options = PipelineOptions(pipeline_args)
+    pipeline_options = PipelineOptions(
+        flags=pipeline_args,
+        project='de2020',
+        temp_location='gs://de2020labs2/tmp/',
+        region='us-central1')
+
     pipeline_options.view_as(SetupOptions).save_main_session = save_main_session
 
     # The pipeline will be run on exiting the with block.
     with beam.Pipeline(options=pipeline_options) as p:
-        train_dataset, test_dataset = (p | 'Create FileName Object' >> ReadFromText('data/pima-indians-diabetes.csv')
-                                       | 'Train_Test_Split' >> beam.Partition(split_dataset, 2, ratio=[8, 2]))
+        train_dataset = (p | 'QueryTable' >> beam.io.Read(beam.io.BigQuerySource(
+            query='SELECT * FROM `de2020.mydataset.diabetes`',
+            use_standard_sql=True)))
 
-        test_dataset | 'WriteTest' >> WriteToText(file_path_prefix="results/test", file_name_suffix=".csv")
-        train_dataset | 'Format' >> beam.Map(printelement)
-        # See https://beam.apache.org/documentation/patterns/side-inputs/
-        # https://beam.apache.org/releases/pydoc/2.3.0/apache_beam.pvalue.html#apache_beam.pvalue.AsIter
         output = (p | 'GetModelName' >> beam.Create(['model.h5'])
                   | 'TrainAndSaveModel' >> beam.FlatMap(
                     train_save_model, traindata=beam.pvalue.AsList(train_dataset)))
