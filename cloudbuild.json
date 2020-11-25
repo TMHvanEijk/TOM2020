@@ -1,0 +1,13 @@
+{
+ "steps": [
+  {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "build",
+        "-t",
+        "gcr.io/de2020/trainingdbapinew1:0.0.1",
+        "./lab3/main/training-db"
+       ]
+   }
+   ]
+ }
