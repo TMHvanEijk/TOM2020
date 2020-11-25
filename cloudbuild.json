@@ -5,8 +5,26 @@
       "args": [
         "build",
         "-t",
-        "gcr.io/de2020/trainingdbapinew1:0.0.1",
-        "./lab3/main/training-db"
+        "gcr.io/de2020/trainingdbapi:latest",
+        "./lab4/training-db"
+       ]
+   },
+   {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "build",
+        "-t",
+        "gcr.io/de2020/trainingcpapi:latest",
+        "./lab3/main/training-cp"
+       ]
+   },
+   {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "build",
+        "-t",
+        "gcr.io/de2020/predictioncpapi:latest",
+        "./lab3/main/prediction-cp"
        ]
    }
    ]
