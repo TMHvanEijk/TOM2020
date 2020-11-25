@@ -26,6 +26,27 @@
         "gcr.io/de2020/predictioncpapi:latest",
         "./lab3/main/prediction-cp"
        ]
+   },
+   {
+       "name": "gcr.io/cloud-builders/docker",
+       "args": [
+           "push",
+           "gcr.io/de2020/trainingdbapi:latest"
+        ]
+   },
+   {
+       "name": "gcr.io/cloud-builders/docker",
+       "args": [
+           "push",
+           "gcr.io/de2020/trainingcpapi:latest"
+        ]
+   },
+   {
+       "name": "gcr.io/cloud-builders/docker",
+       "args": [
+           "push",
+           "gcr.io/de2020/predictioncpapi:latest"
+        ]
    }
    ]
  }
