@@ -16,7 +16,7 @@ spec:
         app: training-db
     spec:
       containers:
-      - image: gcr.io/de2020/trainingdbapi:0.0.1 # Docker image name, that we pushed to GCR
+      - image: gcr.io/data-engineering-course-325518/trainingdbapi:0.0.1 # Docker image name, that we pushed to GCR
         name: training-db-api     # POD name
         volumeMounts:
         - mountPath: /usr/src/tdb
